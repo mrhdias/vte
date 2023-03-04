@@ -6,6 +6,7 @@
 // https://developer.gnome.org/vte/0.40/VteTerminal.html
 // https://developer.gnome.org/vte/unstable/VteTerminal.html
 // https://golang.hotexamples.com/examples/c/-/toVTerminal/golang-tovterminal-function-examples.html
+// https://github.com/golang/go/issues/58625
 //
 
 package vte
@@ -91,14 +92,22 @@ func wrapTerminal(obj *glib.Object, term *vte.Terminal) *Terminal {
 // The gdk RGBA is used as input.
 func (v *Terminal) SetBgColor(color *gdk.RGBA) {
 	// C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
-	C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(&color)))
+
+	// var addr uintptr = color.Native()
+	// p := *(*unsafe.Pointer)(unsafe.Pointer(&addr))
+	// C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(p))
+	C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(uintptrToUnsafePointer(color.Native())))
 }
 
 // SetFgColor sets the foreground color used to draw normal text.
 // The gdk RGBA is used as input.
 func (v *Terminal) SetFgColor(color *gdk.RGBA) {
 	// C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
-	C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(&color)))
+
+	// var addr uintptr = color.Native()
+	// p := *(*unsafe.Pointer)(unsafe.Pointer(&addr))
+	// C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(p))
+	C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(uintptrToUnsafePointer(color.Native())))
 }
 
 // SetFont sets the font used for rendering all text displayed by the terminal,
@@ -107,7 +116,16 @@ func (v *Terminal) SetFgColor(color *gdk.RGBA) {
 // metrics, and attempt to resize itself to keep the same number of rows and
 // columns. The font scale is applied to the specified font.
 // The pango FontDescription is used as input.
-func (v *Terminal) SetFont(font *pango.FontDescription) {
+
+func (v *Terminal) SetFont(fontDesc *pango.FontDescription) {
 	// C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(unsafe.Pointer(font.Native())))
-	C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(unsafe.Pointer(&font)))
+
+	// var addr uintptr = fontDesc.Native()
+	// p := *(*unsafe.Pointer)(unsafe.Pointer(&addr))
+	// C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(p))
+	C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(uintptrToUnsafePointer(fontDesc.Native())))
+}
+
+func uintptrToUnsafePointer(addr uintptr) unsafe.Pointer {
+	return *(*unsafe.Pointer)(unsafe.Pointer(&addr))
 }
