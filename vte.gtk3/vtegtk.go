@@ -4,9 +4,10 @@
 // this library ressources.
 //
 // https://developer.gnome.org/vte/0.40/VteTerminal.html
-//
 // https://developer.gnome.org/vte/unstable/VteTerminal.html
+// https://golang.hotexamples.com/examples/c/-/toVTerminal/golang-tovterminal-function-examples.html
 //
+
 package vte
 
 // #include <vte/vte.h>
@@ -18,7 +19,7 @@ import (
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/gotk3/gotk3/pango"
-	"github.com/sqp/vte"
+	"github.com/mrhdias/vte"
 
 	"errors"
 	"runtime"
@@ -26,21 +27,23 @@ import (
 )
 
 // Terminal is a representation of Vte's VteTerminal.
-//
 type Terminal struct {
 	gtk.Widget
 	vte.Terminal
 }
 
 // NewTerminal creates a new terminal widget.
-//
 func NewTerminal() *Terminal {
 	c := vte.NewTerminal()
 	if c == nil {
 		return nil
 	}
 
-	obj := &glib.Object{glib.ToGObject(unsafe.Pointer(c.Native()))}
+	// obj := &glib.Object{glib.ToGObject(unsafe.Pointer(c.Native()))}
+	obj := &glib.Object{
+		GObject: glib.ToGObject(unsafe.Pointer(c.Native())),
+	}
+
 	obj.RefSink()
 	runtime.SetFinalizer(obj, (*glib.Object).Unref)
 
@@ -48,7 +51,6 @@ func NewTerminal() *Terminal {
 }
 
 // NewTerminalWindow creates a new terminal widget packed in a dedicated window.
-//
 func NewTerminalWindow() (*Terminal, *gtk.Window, error) {
 	window, e := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if e != nil {
@@ -75,23 +77,28 @@ func (v *Terminal) termNative() *C.VteTerminal {
 }
 
 func wrapTerminal(obj *glib.Object, term *vte.Terminal) *Terminal {
-	return &Terminal{gtk.Widget{glib.InitiallyUnowned{obj}}, *term}
+	// return &Terminal{gtk.Widget{glib.InitiallyUnowned{obj}}, *term}
+	return &Terminal{gtk.Widget{
+		InitiallyUnowned: glib.InitiallyUnowned{
+			Object: obj,
+		},
+	}, *term}
 }
 
 // SetBgColor sets the background color for text which does not have a specific
 // background color assigned. Only has effect when no background image is set
 // and when the terminal is not transparent.
 // The gdk RGBA is used as input.
-//
 func (v *Terminal) SetBgColor(color *gdk.RGBA) {
-	C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
+	// C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
+	C.vte_terminal_set_color_background(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(&color)))
 }
 
 // SetFgColor sets the foreground color used to draw normal text.
 // The gdk RGBA is used as input.
-//
 func (v *Terminal) SetFgColor(color *gdk.RGBA) {
-	C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
+	// C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(color.Native())))
+	C.vte_terminal_set_color_foreground(v.termNative(), (*C.GdkRGBA)(unsafe.Pointer(&color)))
 }
 
 // SetFont sets the font used for rendering all text displayed by the terminal,
@@ -100,7 +107,7 @@ func (v *Terminal) SetFgColor(color *gdk.RGBA) {
 // metrics, and attempt to resize itself to keep the same number of rows and
 // columns. The font scale is applied to the specified font.
 // The pango FontDescription is used as input.
-//
 func (v *Terminal) SetFont(font *pango.FontDescription) {
-	C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(unsafe.Pointer(font.Native())))
+	// C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(unsafe.Pointer(font.Native())))
+	C.vte_terminal_set_font(v.termNative(), (*C.PangoFontDescription)(unsafe.Pointer(&font)))
 }
